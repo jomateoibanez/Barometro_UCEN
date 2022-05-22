@@ -1,0 +1,294 @@
+---
+title: "Guía 4 - Análisis de Datos Categóricos"
+author: "Carolina Cornejo"
+date: "17/11/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+	message = FALSE,
+	warning = FALSE)
+```
+
+```{r}
+library(haven)
+library(texreg)
+library(knitr)
+library(kableExtra)
+library(xtable)
+library(foreign) 
+library(aod)
+library(stargazer)
+library(methods)
+library(dplyr)
+library(MASS)
+library(sjPlot)
+library(ggplot2)
+```
+
+```{r, include=FALSE}
+load("/Users/carolinacornejo/Desktop/Guia 4/coes.RData")
+```
+
+```{r}
+coes$srelig=factor(coes$srelig, labels=c("Nunca","Una vez al año","Varias veces al año",
+                                         "Una vez al mes","2 o 3 veces a la semana",
+                                         "Una vez a la semana","Varias veces a la semana"))
+```
+
+En base a estos datos estime o calcule lo siguiente:
+
+1. Estime dos modelos logísticos ordinales con srelig como variable dependientes y las siguientes independientes:
+Muestre los resultados (output de R o Stata con coeficiente, errores estándar, estadístico t y valor p (5 puntos)
+
+* M1: sexo, edad, educon, ecivil (con Casado como categoría de referencia) y ppol (con Izquierda/Centro izquierda como categoría de referencia).
+* M2: sexo, edad, educon, ecivil (con Casado como categoría de referencia) y una interacción entre sexo y educon.
+
+```{r, results='asis', paged.print=TRUE, include.pvalues=TRUE}
+m1=polr(srelig~sexo+edad+educon+ecivil+ppol, data=coes, Hess = TRUE)
+m2=polr(srelig~sexo+edad+educon+ecivil+sexo:educon, data=coes, Hess = TRUE)
+l1=extract.polr(m1, include.thresholds = TRUE)
+l2=extract.polr(m2, include.thresholds = TRUE)
+  
+print(texreg(l=list(l1,l2), stars=c(0.01,0.05,0.1), digits=3,float.pos="h!",
+        caption = "Modelo de regresion Logit para asistencia a servicios religiosos",
+        custom.coef.names = c("Mujer",
+                              "Edad",
+                              "Educacion",
+                              "Soltero",
+                              "Viudo",
+                              "Separado/Divorciado/Anulado",
+                              "Centro",
+                              "Derecha",
+                              "No sabe/No responde",
+                              "Nunca|una vez al año",
+                              "Una vez al año|Varias veces al año",
+                              "Varias veces al año|Una vez al mes",
+                              "Una vez al mes|Dos o tres veces a la semana",
+                              "Dos o tres veces a la semana|Una vez a la semana",
+                              "Una vez a la semana|Varias veces a la semana",
+                              "Mujer*Educación"), 
+        custom.model.names = c("Modelo Logit 1", "Modelo Logit 2"),
+        caption.above = TRUE,
+        reorder.coef =c(1:9,16,10:15), scalebox = .95))
+```
+
+```{r, results="hide", paged.print=FALSE}
+(ctable <- coef(summary(m1)))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+```
+
+```{r, results="hide", paged.print=TRUE}
+# Información adicional Modelo 1
+(ctable <- cbind(ctable, "p value" = p))
+```
+
+
+```{r, results="asis", paged.print=TRUE}
+  colnames(ctable) <- c("Estimación","Error Estándar","Estadístico t", "Estadístico p")
+  row.names(ctable) <-c("Mujer",
+                              "Edad",
+                              "Educacion",
+                              "Soltero",
+                              "Viudo",
+                              "Separado/Divorciado/Anulado",
+                              "Centro",
+                              "Derecha",
+                              "No sabe/No responde",
+                              "Nunca|una vez al año",
+                              "Una vez al año|Varias veces al año",
+                              "Varias veces al año|Una vez al mes",
+                              "Una vez al mes|Dos o tres veces a la semana",
+                              "Dos o tres veces a la semana|Una vez a la semana",
+                              "Una vez a la semana|Varias veces a la semana")
+
+  kable(ctable, "latex", booktabs =TRUE, escape = FALSE,
+      caption = "Información adicional Modelo Logit 1",
+      digit = 3, align = "c") %>%
+  kable_styling(full_width = F, latex_options = c("HOLD_position", "striped"))
+
+```
+
+```{r, results="hide", paged.print=FALSE}
+(ctable1 <- coef(summary(m2)))
+p1 <- pnorm(abs(ctable1[, "t value"]), lower.tail = FALSE) * 2
+```
+
+```{r, results="hide", paged.print=TRUE}
+# Información adicional Modelo 1
+(ctable1 <- cbind(ctable1, "p value" = p1))
+```
+
+```{r, results="asis", paged.print=TRUE}
+  colnames(ctable1) <- c("Estimación","Error Estándar","Estadístico t", "Estadístico p")
+  row.names(ctable1) <-c("Mujer",
+                              "Edad",
+                              "Educacion",
+                              "Soltero",
+                              "Viudo",
+                              "Separado/Divorciado/Anulado",
+                              "Mujer*Educacion",
+                              "Nunca|una vez al año",
+                              "Una vez al año|Varias veces al año",
+                              "Varias veces al año|Una vez al mes",
+                              "Una vez al mes|2 o 3 veces a la semana",
+                              "Dos o tres veces a la semana|Una vez a la semana",
+                              "Una vez a la semana|Varias veces a la semana")
+
+  kable(ctable1, "latex", booktabs =TRUE, escape = FALSE,
+      caption = "Información adicional Modelo Logit 2",
+      digit = 3, align = "c") %>%
+  kable_styling(full_width = F, latex_options = c("HOLD_position", "striped"))
+
+```
+
+2. En base a M2, construya un gráfico para los coeficientes donde sea posible distinguir magnitud y sentido (eje X), Nombre (eje Y), intervalos de confianza y significancia. (5 puntos)
+
+
+```{r}
+plot_model(m2, type = c("est"), show.values = T, show.p = T, transform = NULL, show.intercept = T,
+           value.size = 3, value.offset = .2, dot.size = 1.5,
+           order.terms = c(8,9,10,11,12,13,1,2,3,4,5,6,7), 
+           axis.labels = c("Mujer*Educación","Sep./Div./Anu.","Viudo/a","Soltero/a",
+                           "Educación","Edad","Mujer","6|7","5|6","4|5","3|4",
+                           "2|3","1|2"), 
+           title = "Gráfico para los coeficientes Modelo Logit 2")
+```
+
+3. En base a los resultados del M1, interprete el efecto de edad en términos de razón de odds (use los valores 35 y 67 años para realizar sus cálculos) (5 puntos).
+
+```{r}
+67-35
+edad <- (exp(m1$coefficients["edad"]*-32))
+(edad-1)*100
+edad
+```
+La razón de odds es 0.48, esto quiere decir que las odds de mencionar que **nunca** asiste a servicios religiosos en comparación a **una vez al año o más**, son un 51.8% más bajos al aumentar 32 años la edad del encuestado, manteniendo el resto de las variables constantes. De todas formas, cabe destacar que el efecto de la edad es proporcional entre el resto de las categorías de referencia. 
+
+4. En base a los resultados del M2, interprete el efecto del sexo en término de razón de odds (5 puntos).
+
+```{r}
+sexo <- (exp(-(1-0)*m2$coef[1]))
+sexo #odds ratio
+(sexo-1)*100
+```
+
+La razón de odds es 0.41, esto quiere decir que las odds de mencionar que **nunca** asiste a servicios religiosos en comparación a **una vez al año o más**, son 58.7% más bajo para las mujeres que para los hombres, cuando el encuestado no tiene estudios, manteniendo el resto de las variables constantes. 
+
+5. Según M1 calcule e interprete la probabilidad para cada una de las categorías de respuesta de srelig para una personas que es mujer, de 45 años, con educación media completa (categoría 4), casado, y de tendencia política de centro. Muestre sus cálculos y/o código empleado (6 puntos).
+
+```{r, results='asis', results='hold'}
+X=c(1,45,4,0,0,0,1,0,0)
+Xb=X %*% m1$coefficients
+invlogit=function(x)exp(x)/(1+exp(x))
+phat1=invlogit(m1$zeta[1]-Xb) 
+phat2=invlogit(m1$zeta[2]-Xb)-invlogit(m1$zeta[1]-Xb)
+phat3=invlogit(m1$zeta[3]-Xb)-invlogit(m1$zeta[2]-Xb)
+phat4=invlogit(m1$zeta[4]-Xb)-invlogit(m1$zeta[3]-Xb)
+phat5=invlogit(m1$zeta[5]-Xb)-invlogit(m1$zeta[4]-Xb)
+phat6=invlogit(m1$zeta[6]-Xb)-invlogit(m1$zeta[5]-Xb)
+phat7=1-invlogit(m1$zeta[6]-Xb)
+
+table <- as.data.frame(rbind(phat1,phat2,phat3,phat4,phat5,phat6,phat7), 
+          row.names = c("Nunca","Una vez al año","Varias veces al año",
+          "Una vez al mes","2 o 3 veces a la semana","Una vez a la semana",
+          "Varias veces a la semana"))
+
+kable(table,digits=3, align = "c", 
+      col.names = "Probabilidad predicha", 
+      row.names = T, 
+      caption = "Probabilidad para cada una de las categorías de respuesta de la variable 
+      dependiente para una mujer, de 45 años, con educación media completa, casada y 
+      de tendencia política de centro") %>% 
+  kable_styling(full_width = T, latex_options = c("HOLD_position", "striped"))
+```
+
+La probabilidad predicha de **nunca** asistir a servicios religiosos y ser mujer, de 45 años, con educación media completa, casada y de tendencia política de centro es 0.218. Mientras que la probabilidad predicha de asistir **una vez al año** a servicio religioso, siendo mujer, de 45 años, con educación media completa, casada y de tendencia política de centro es 0.154. Para quien asiste **varias veces  al año** a servicios religiosos con el las mismas características planteadas anteriormente, tienen una probabilidad predicha de 0.273. 
+
+La probabilidad predicha de asistir **una vez al mes** a servicios religiosos es 0.086 siendo mujer, de 45 años, con educación media completa, casada y de tendencia política de centro. Para quien asiste **2 o 3 veces a la semana** a servicios religiosos, su la probabilidad predicha es 0.083. También se observa que la probabilidad predicha de asistir **una vez a la semana** a servicios religiosos siendo mujer, de 45 años, con educación media completa, casada y de tendencia política de centro es 0.114. Y que finalmente, la probabilidad predicha de asistir **varias veces a la semana** a servicios religiosos con las mismas características es 0.072. 
+
+A modo de conclusión, se puede decir que las probabilidades predichas estimadas en general son bajas, pero para quienes poseen estas características de un sujeto típico y que declaran **nunca** asistir a servicios religiosos, **una vez al año**, y **varias veces al año** son más altas que para los que van más frecuentemente.
+
+6. En base a M1, calcule e interprete el efecto marginal “observado” (o marginalizado) de ser de Derecha respecto a ser de Izquierda para cada una de las categorías de respuestas de srelig (6 puntos).
+
+```{r, results='asis'}
+X0=data.frame(sexo=coes$sexo, edad=coes$edad, educon=coes$educon, ecivil=coes$ecivil, 
+              ppol=coes$ppol)
+
+X0$ppol=levels(coes$ppol)[1] # ser izquierda
+phatizq=predict(m1, X0,type="p")
+X0$ppol=levels(coes$ppol)[3] # ser derecha
+phatder=predict(m1, X0,type="p")
+
+kable(cbind(apply(phatder-phatizq,2,mean,na.rm=T)),digits=4, align = "c",  
+      col.names = "Efectos Marginales", 
+      row.names = T, 
+      caption = "Efectos Marginales de ser de Derecha respecto de Izquierda para 
+      cada una de las categorías de respuesta de asistencia a servicios religiosos") %>% 
+  kable_styling(full_width = T, latex_options = c("HOLD_position", "striped"))
+```
+El efecto marginal de responder que **nunca** va a servicios religiosos es 0.1015 más baja para una persona que es de derecha que para una persona que es de izquierda.Esto mismo pero de responder que asiste **una vez al año** a servicios religiosos es 0.0215 más baja para una persona que es de derecha respecto de una persona que es de izquierda. 
+
+Para quellos que asisten **varias veces al año** a servicios religiosos el efecto marginal es 0.0190 más alta para una persona que es de derecha que para una persona que es de izquierda.Mientras que para quienes asisten **una vez al mes** a servicios religiosos su efecto marginal es 0.0175 más alta para una persona que es de derecha respecto de una persona que es de izquierda. 
+
+El efecto marginal de responder que asiste **2 o 3 veces a la semana** a servicios religiosos es 0.0216 más alta para una persona que es de derecha respecto de una persona que es de izquierda. Responder que se asiste  **una vez más alta** a servicios religiosos su efecto marginal es 0.0370 más alta para una persona que es de derecha respecto de una persona que es de izquierda. 
+
+Por último, el efecto marginal de responder que asiste **varias veces a la semana** a servicios religiosos es 0.0280 más alta para una persona que es de derecha respecto de una persona que es de izquierda. 
+
+
+7. Calcule los percentiles 2.5 y 97.5 del efecto marginal de la pregunta anterior. Muestre sus cálculos y/o código empleado (4 puntos).
+
+```{r}
+#Percentiles .025
+p025=apply(phatder-phatizq,2,function(x)quantile(x,probs=0.025,na.rm=T))
+#Percentiles .975
+p975=apply(phatder-phatizq,2,function(x)quantile(x,probs=0.975,na.rm=T))
+
+kable(cbind(p025,p975),digits=4, align = "c", 
+      col.names = c("Percentil 2.5","Percentil 97.5"), 
+      row.names=T,
+      caption = "Cálculo de percentiles 2.5 y 97.5 para efectos marginales de ser de 
+      Derecha respecto de Izquierda para cada una de las categorías de respuesta de 
+      asistencia a servicios religiosos") %>% 
+  kable_styling(full_width = T, latex_options = c("HOLD_position", "striped"))
+```
+
+Considerandos percentiles 2.5 y 97.5 de los efectos marginales de las distintas categorías de la asisitencia a servicios religiosos, se puede considerar solamente que entre aquellos que declaran **nunca** asistir existen diferencias estadísticamente significativa entre aquellos que tienen una posición política de derecha respecto a los de izquierd. El resto de las cateogorías posibles de respuesta se traslapan entre sí, por lo que en estas se concluye que no existe diferencia entre los de derecha y de izquierda al asistir **una vez al año**, **varias veces al año**, **una vez al mes**, **2 o 3 veces a la semana**, **una vez a la semana**, **varias veces a la semana**. 
+
+8. En base a M2 calcule el cambio discreto en las probabilidades para una asistencia a servicios religiosos de “2 o 3 veces a la semana” para un aumento del nivel educacional desde Sin estudios (código 1) hasta universitaria completa (código 9) tanto para hombres, como para mujeres (deje las demás variables en edad=59 y estado civil soltero). Muestre sus cálculos y/o código empleado (6 puntos).
+
+```{r, results='asis', paged.print=TRUE}
+# Hombre
+Xh1 = cbind(0,59,1,1,0,0,1*1) # educacion 1
+Xh1b = Xh1 %*% m2$coefficients
+Xh2 = cbind(0,59,9,1,0,0,1*9) # educacion 9
+Xh2b = Xh2 %*% m2$coefficients
+
+# Mujer
+Xm1 = cbind(1,59,1,1,0,0,0*1) # educacion 1
+Xm1b = Xm1 %*% m2$coefficients
+Xm2 = cbind(1,59,9,1,0,0,0*9) # educacion 9
+Xm2b = Xm2 %*% m2$coefficients
+
+# Hombre que asiste 2 a 3 veces a la semana a servicios religiosos 
+hom <-(invlogit(m2$zeta[5] - Xh2b) - invlogit(m2$zeta[4] - Xh2b)) -
+(invlogit(m2$zeta[5] - Xh1b) - invlogit(m2$zeta[4] - Xh1b))
+
+# Mujer que asiste 2 a 3 veces a la semana a servicios religiosos
+muj <-(invlogit(m2$zeta[5] - Xm2b) - invlogit(m2$zeta[4] - Xm2b)) -
+(invlogit(m2$zeta[5] - Xm1b) - invlogit(m2$zeta[4] - Xm1b))
+A=cbind(muj,hom)
+A = as.data.frame(A)
+```
+
+```{r, results='asis', paged.print=TRUE}
+kable(A, digits = 3, align = "c",
+      caption = "Cambio discreto en la probabilidad de asistir 2 a 3 veces a la semana a 
+                  servicios religiosos para personas in estudio versus educación 
+                  de postgrado",
+      col.names=c("Mujer", "Hombre")) %>% 
+      kable_styling(full_width = T, latex_options = c("HOLD_position", "striped"))
+```
+
+El cambio discreto en la probabilidad de asistir a servicios religiosos de **2 a 3 veces a la semana** es igual a 0.009 puntos de probabilidad para los hombres al pasar de no tener estudio a tener estudios de postgrado, es decir que a medida que aumenta el cambio en el nivel educacional disminuye la probabilidad de asistir 2 a 3 veces a servicios religiosos. Para el caso de las mujeres, el cambio discreto en la probabilidad de asisitir a servicios religiosos de **2 a 3 veces a la semana** es 0.026 puntos de probabilidad al pasar de no tener estudios a tener estudios de postgrado. Esto equivale a decir que las mujeres tienen una probabilidad mayor, por lo que el cambio en el nivel educacional estaría afectando en mayor medida a las mujeres que a los hombres.

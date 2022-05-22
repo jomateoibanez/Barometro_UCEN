@@ -1,0 +1,48 @@
+---
+title: "Interbarómetro"
+author: "Observatorio Política y Redes Sociales - Universidad Central"
+date: "5/16/2022"
+output: 
+  powerpoint_presentation:
+    reference_doc: interbarometro-pptx-formato.pptx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Resumen ejecutivo
+
+### 4. Two Content
+:::::::::::::: {.columns}
+::: {.column}
+* This layout has a placeholder for a title and two placeholders for content. 
+* This layout is used when you specify two columns for a content slides at the slide level.
+:::
+::: {.column}
+
+
+
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+

@@ -1,0 +1,25 @@
+---
+title: "Interbarómetro"
+author: "Observatorio Política y Redes Sociales, Universidad Central"
+date: "5/19/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<html>
+  <head>
+    <link href="" rel "stylesheet"/>
+  </head>
+  
+  <body>
+  </body>
+</html>
+
+
+```{r}
+
+```
+

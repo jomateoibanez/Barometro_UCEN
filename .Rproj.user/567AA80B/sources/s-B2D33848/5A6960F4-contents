@@ -1,0 +1,422 @@
+library(shinydashboard)
+library(shiny)
+library(rtweet)
+library(wordcloud)
+library(tm)
+library(lubridate)
+library(ggthemes)
+library(stringr)
+library(stringi)
+library(tidytext)
+library(tidyverse)
+library(googlesheets4)
+library(gargle)
+library(googledrive)
+library(shinyjs)
+
+
+
+function(input, output, session) {
+
+  # select token
+  twitter_token <- reactive({readRDS(paste0("./Data/",input$token))})
+  
+  rawData<-eventReactive (
+    # First query do not do anything
+    input$update,{
+      isolate({ 
+        
+        withProgress({
+          setProgress(message = "Obteniendo tweets...")
+          go_power <- ifelse(input$num>18000,TRUE,FALSE)
+          ## registro de busqueda
+          data_aux <- data.frame(date = now(tzone = "America/Santiago"),
+                                 user = input$user,
+                                 query = input$query,
+                                 num_max = input$num,
+                                 link = str_extract(input$token,"\\d"),
+                                 from = paste(input$dateRange2[1]),
+                                 to = paste(input$dateRange2[2]+1),
+                                 language = input$leng
+          )
+          
+          
+          tweets <- search_tweets(q=input$query,
+                                  n=input$num,
+                                  type = "recent",
+                                  lang=input$leng,
+                                  since=paste(input$dateRange2[1]),
+                                  until=paste(input$dateRange2[2]+1),
+                                  token = twitter_token(),
+                                  retryonratelimit = go_power)
+          
+          tweets
+          
+        })
+        
+      })
+      
+    })
+  
+  # Number of tweets found
+  output$number<-renderText({
+    mindate_uk <- min(ymd_hms(rawData()$created_at))
+    mindate<-with_tz(mindate_uk, tz="America/Santiago")
+    maxdate_uk <- max(ymd_hms(rawData()$created_at))
+    maxdate<-with_tz(maxdate_uk, tz="America/Santiago")    
+    paste0("El total de tweets encontrado es ", 
+           as.character(nrow(rawData())) ,
+           ", desde ",
+           as.character(mindate),
+           " (",
+           as.character(mindate_uk),
+           " GMT)",
+           " hasta\n",
+           as.character(maxdate),
+           " (",
+           as.character(maxdate_uk),
+           " GMT)")
+  })
+  
+  # Create the table  
+  output$table<-renderTable(
+    { head(rawData()$text,n=5)}
+
+  )
+  # Create wordcloud
+  output$wordcl<-renderPlot({
+    
+    clean_tweet=iconv(rawData() %>%
+                        filter(!is_retweet) %>% 
+                        select(text) %>%
+                        bind_rows(rawData() %>%
+                                    filter(is_retweet) %>%
+                                    select(text=retweet_text)) %>% pull(text),"UTF-8","UTF-8",sub='')
+    # tolower
+    clean_tweet=stri_trans_tolower(clean_tweet)
+    # delete urls
+    clean_tweet = str_replace_all(clean_tweet,"http[^[:space:]]*", "")
+    # remove query
+    clean_tweet=str_replace_all(clean_tweet,isolate(tolower(input$query)),"")
+    # delete &
+    clean_tweet = str_replace_all(clean_tweet,"&amp", " ")
+    # delete RT
+    clean_tweet = str_replace_all(clean_tweet,"(rt|via)((?:\\b\\W*@\\w+)+)", " ")
+    # delete mentions
+    clean_tweet = str_replace_all(clean_tweet,"@\\w+", " ")
+    # delete punctuation
+    clean_tweet = str_replace_all(clean_tweet,"[[:punct:]]", " ")
+    # delete digits
+    clean_tweet = str_replace_all(clean_tweet,"[[:digit:]]", " ")
+    # delete tabs
+    clean_tweet = str_replace_all(clean_tweet,"[\t]{2,}", "")
+    # delete spaces
+    clean_tweet = str_replace_all(clean_tweet,"^\\s+|\\s+$", "")
+    # remove emoticons in UTF8
+    clean_tweet=gsub('\\p{So}|\\p{Cn}', '', clean_tweet, perl = TRUE)
+    # remove non graphical characters
+    clean_tweet=str_replace_all(clean_tweet,"[^[:graph:]]", " ")
+    # remove whitespaces
+    clean_tweet=stripWhitespace(clean_tweet)
+    # stopwords
+    stop_list=c(stopwords(input$leng),
+                "q","d","t","p","pq","c","rt")
+    stop_df=data.frame(word=stop_list,stringsAsFactors=FALSE)
+    # Delete stopwords
+    count_words=data.frame(num=seq(1,length(clean_tweet)),
+                           contenido=clean_tweet, stringsAsFactors = FALSE) %>%
+      unnest_tokens(word,contenido) %>%
+      mutate(word=as.character(word)) %>%
+      anti_join(stop_df,by="word") %>%
+      count(num, word, sort = TRUE) %>%
+      ungroup()
+    
+    palabras=count_words %>% group_by(word) %>% summarise(n=sum(n)) %>% arrange(desc(n)) %>%
+      ungroup() %>% head(200)
+
+    wordcloud(palabras$word,palabras$n,
+              scale=c(3,.5), rot.per=0.2, colors=palette(), random.order = FALSE)
+    
+  }
+  )
+  
+  # Create bigrama
+  output$bigram<-renderPlot({
+    pat="(RT|via)(((?:\\b\\W*|)@\\w+)+)|(https|http)://t.co/[A-Za-z\\d]+|&amp;|http\\w*|@\\w+|(\\w+\\.|)\\w+\\.\\w+(/\\w+)*"
+    palabra=isolate(input$query)
+    ### bigrama
+    rawData() %>%
+      filter(!is_retweet) %>% 
+      select(text) %>%
+      bind_rows(rawData() %>%
+                  filter(is_retweet) %>%
+                  select(text=retweet_text)) %>% 
+      mutate(text = str_replace_all(text,pat, "")) %>%
+      unnest_tokens(word, text, token="ngrams",n=2 ) %>%
+      count(word, sort=TRUE) %>%
+      separate(word, c("word1", "word2"), sep = " ") %>%
+      filter(!word1 %in% c(stopwords("es"),"q","d","t","cc","x","html","posted","just","online","streaming", palabra)) %>%
+      filter(!word2 %in% c(stopwords("es"),"q","d","t","cc","x","html","posted","just","online","streaming", palabra)) %>%
+      filter(!str_detect(word1,"\\d+")) %>%
+      filter(!str_detect(word2,"\\d+")) %>%
+      unite(bigrama, word1, word2, sep = " ") %>%
+      top_n(13,n) %>%
+      ungroup() %>%
+      mutate(bigrama=reorder(bigrama,n)) %>%
+      ggplot(aes(x=bigrama,y=n))+geom_bar(stat="identity", fill="lightblue")+coord_flip()+
+      ggtitle(paste(palabra))+ggthemes::theme_tufte()+
+      theme(text = element_text(size =18))
+    
+  }
+  )
+  
+  # Plot counter
+  output$counter<-renderPlot({
+    
+    rawData() %>%
+      mutate(created=with_tz(created_at, tzone="America/Santiago")) %>%
+      ggplot(aes(x=created))+geom_histogram(bins = .1*nrow(rawData()),fill="white",col="black")+
+      theme_tufte()+theme(axis.text.x=element_text(angle=-45, hjust=0.001),
+                          text = element_text(size =20))+
+      ggtitle("Número de tweets en el tiempo")
+    
+    
+  })
+  
+  # Plot retweet
+  output$retweet<-renderPlot({
+    
+    rawData() %>% 
+      filter(!is_retweet) %>% 
+      select(user=screen_name,count=retweet_count) %>% 
+      bind_rows(rawData() %>% 
+                  filter(is_retweet) %>% 
+                  mutate(user=gsub("(RT|via)(?:\\b\\W*@)","",str_extract(text,"(RT|via)(?:\\b\\W*@\\w+)"))) %>% 
+                  select(user,count=retweet_count)) %>% 
+      na.omit() %>%
+      group_by(user) %>% 
+      summarise(count=max(count)) %>% 
+      arrange(count) %>% 
+      mutate(user=factor(user,user)) %>% 
+      tail(25) %>% 
+      ggplot(aes(x=user, y=count))+geom_bar(stat = "identity")+
+      xlab("usuario")+ylab("retweets")+coord_flip()+theme_tufte()+
+      geom_text(aes(label=count), vjust=.05, hjust=-.03)+
+      theme(text = element_text(size =20))+ggtitle("Usuarios versus número de retweets")
+    
+  })
+  
+  # Plot users sex
+  output$sex_plot<-renderPlot({
+    
+    dict <- read_csv("./Data/dictionary_priv.csv")
+
+    set.seed(1212)
+    rawData() %>% 
+      select(user_id, screen_name) %>% 
+      distinct() %>% 
+      left_join(dict %>% 
+                  filter(str_detect(nombre,"@")) %>% 
+                  mutate(screen_name = str_replace(nombre,"@","")) %>% 
+                  select(-nombre),by="screen_name") %>% 
+      select(user_id, sexo_1=sexo) %>% 
+      left_join(rawData() %>% 
+                  unnest_tokens(word, name) %>% 
+                  select(user_id, word) %>% 
+                  mutate(word = stri_trans_char(word, "á","a"),
+                         word = stri_trans_char(word, "é","e"),
+                         word = stri_trans_char(word, "í","i"),
+                         word = stri_trans_char(word, "ó","o"),
+                         word = stri_trans_char(word, "ú","u")) %>% 
+                  left_join(dict %>% 
+                              mutate(nombre=tolower(nombre)) %>% 
+                              rename(word=nombre) %>% 
+                              mutate(word = stri_trans_char(word, "á","a"),
+                                     word = stri_trans_char(word, "é","e"),
+                                     word = stri_trans_char(word, "í","i"),
+                                     word = stri_trans_char(word, "ó","o"),
+                                     word = stri_trans_char(word, "ú","u"))) %>% 
+                  mutate(num=ifelse(is.na(sexo),0,1)) %>% 
+                  group_by(user_id) %>% 
+                  mutate(num=sum(num),
+                         sexo=ifelse(num==0,"na",sexo)) %>% 
+                  ungroup() %>% 
+                  na.omit() %>% 
+                  group_by(user_id) %>% 
+                  summarise(sexo_2=sample(sexo,1)), by="user_id") %>% 
+      mutate(sexo=if_else(is.na(sexo_1) & is.na(sexo_2),"na",
+                          if_else(is.na(sexo_1),sexo_2, sexo_1))) %>% 
+      count(sexo) %>% 
+      mutate(porcentaje=n/sum(n),
+             sexo = as.factor(sexo),
+             sexo=reorder(sexo,desc(porcentaje) )) %>% 
+      ggplot(aes(x=sexo, y=n, fill=sexo))+geom_bar(stat = "identity")+
+      geom_text(aes(label=paste0(n," (",round(100*porcentaje),"%",")")))+
+      ggthemes::theme_tufte()+
+      ylab("Usuarios")+xlab("Tipo")+
+      theme(legend.position ="none",text = element_text(size =20))+
+      ggtitle("Distribución por tipo")
+
+    
+  })
+  
+  #Create download
+  output$download<-downloadHandler(filename <- function() {
+    mindate_uk <- min(ymd_hms(rawData()$created_at))
+    mindate<-with_tz(mindate_uk, tz="America/Santiago")
+    maxdate_uk <- max(ymd_hms(rawData()$created_at))
+    maxdate<-with_tz(maxdate_uk, tz="America/Santiago") 
+    paste0(input$query,"_",
+           mindate,"_to_",
+           maxdate, '.csv')},
+    content <- function(file){
+      
+      drive_deauth()
+      sheets_deauth()
+      dict <- drive_get(as_id("https://docs.google.com/spreadsheets/d/18T-gtJ87kCYbA4oQu1AkEEszNT0ucusjfRSRo8qbn_I/edit?usp=sharing")) %>% 
+        sheets_read()
+      
+      set.seed(1212)
+      data <- rawData() %>% 
+        left_join(
+          rawData() %>% 
+            select(user_id, screen_name) %>% 
+            distinct() %>% 
+            left_join(dict %>% 
+                        filter(str_detect(nombre,"@")) %>% 
+                        mutate(screen_name = str_replace(nombre,"@","")) %>% 
+                        select(-nombre),by="screen_name") %>% 
+            select(user_id, sexo_1=sexo) %>% 
+            left_join(rawData() %>% 
+                        unnest_tokens(word, name) %>% 
+                        select(user_id, word) %>% 
+                        mutate(word = stri_trans_char(word, "á","a"),
+                               word = stri_trans_char(word, "é","e"),
+                               word = stri_trans_char(word, "í","i"),
+                               word = stri_trans_char(word, "ó","o"),
+                               word = stri_trans_char(word, "ú","u")) %>% 
+                        left_join(dict %>% 
+                                    mutate(nombre=tolower(nombre)) %>% 
+                                    rename(word=nombre) %>% 
+                                    mutate(word = stri_trans_char(word, "á","a"),
+                                           word = stri_trans_char(word, "é","e"),
+                                           word = stri_trans_char(word, "í","i"),
+                                           word = stri_trans_char(word, "ó","o"),
+                                           word = stri_trans_char(word, "ú","u"))) %>% 
+                        mutate(num=ifelse(is.na(sexo),0,1)) %>% 
+                        group_by(user_id) %>% 
+                        mutate(num=sum(num),
+                               sexo=ifelse(num==0,"na",sexo)) %>% 
+                        ungroup() %>% 
+                        na.omit() %>% 
+                        group_by(user_id) %>% 
+                        summarise(sexo_2=sample(sexo,1)), by="user_id") %>% 
+            mutate(sexo=if_else(is.na(sexo_1) & is.na(sexo_2),"na",
+                                if_else(is.na(sexo_1),sexo_2, sexo_1))) %>% 
+            select(user_id, sexo), by ="user_id")
+      
+      write_as_csv(data, file,fileEncoding = 'UTF-8')
+      
+    })
+  
+  
+  #Create download2
+  output$download2<-downloadHandler(filename <- function() {paste0("wc_",input$query, '.csv')},
+                                    content <- function(file){
+                                      clean_tweet=iconv(rawData() %>%
+                                                          filter(!is_retweet) %>% 
+                                                          select(text) %>%
+                                                          bind_rows(rawData() %>%
+                                                                      filter(is_retweet) %>%
+                                                                      select(text=retweet_text)) %>% pull(text),"UTF-8","UTF-8",sub='')
+                                      # tolower
+                                      clean_tweet=stri_trans_tolower(clean_tweet)
+                                      # delete urls
+                                      clean_tweet = str_replace_all(clean_tweet,"http[^[:space:]]*", "")
+                                      # remove query
+                                      clean_tweet=str_replace_all(clean_tweet,tolower(input$query),"")
+                                      # delete &
+                                      clean_tweet = str_replace_all(clean_tweet,"&amp", " ")
+                                      # delete RT
+                                      clean_tweet = str_replace_all(clean_tweet,"(rt|via)((?:\\b\\W*@\\w+)+)", " ")
+                                      # delete mentions
+                                      clean_tweet = str_replace_all(clean_tweet,"@\\w+", " ")
+                                      # delete punctuation
+                                      clean_tweet = str_replace_all(clean_tweet,"[[:punct:]]", " ")
+                                      # delete digits
+                                      clean_tweet = str_replace_all(clean_tweet,"[[:digit:]]", " ")
+                                      # delete tabs
+                                      clean_tweet = str_replace_all(clean_tweet,"[\t]{2,}", "")
+                                      # delete spaces
+                                      clean_tweet = str_replace_all(clean_tweet,"^\\s+|\\s+$", "")
+                                      # remove emoticons in UTF8
+                                      clean_tweet=gsub('\\p{So}|\\p{Cn}', '', clean_tweet, perl = TRUE)
+                                      # remove non graphical characters
+                                      clean_tweet=str_replace_all(clean_tweet,"[^[:graph:]]", " ")
+                                      # remove whitespaces
+                                      clean_tweet=stripWhitespace(clean_tweet)
+                                      # stopwords
+                                      stop_list=c(stopwords(input$leng),
+                                                  "q","d","t","p","pq","c","rt")
+                                      stop_df=data.frame(word=stop_list,stringsAsFactors=FALSE)
+                                      # Delete stopwords
+                                      count_words=data.frame(num=seq(1,length(clean_tweet)),
+                                                             contenido=clean_tweet, stringsAsFactors = FALSE) %>%
+                                        unnest_tokens(word,contenido) %>%
+                                        mutate(word=as.character(word)) %>%
+                                        anti_join(stop_df,by="word") %>%
+                                        count(num, word, sort = TRUE) %>%
+                                        ungroup()
+                                      
+                                      palabras=count_words %>% group_by(word) %>% summarise(n=sum(n)) %>% arrange(desc(n)) %>%
+                                        ungroup() %>% head(200)
+                                      write.csv2(palabras, file,fileEncoding = 'UTF-8')
+                                    })
+  
+  #Create download
+  output$download3<-downloadHandler(filename <- function() {paste0("bigram_",input$query, '.csv')},
+                                    content <- function(file){
+                                      pat="(RT|via)(((?:\\b\\W*|)@\\w+)+)|(https|http)://t.co/[A-Za-z\\d]+|&amp;|http\\w*|@\\w+|(\\w+\\.|)\\w+\\.\\w+(/\\w+)*"
+                                      palabra=input$query
+                                      ### bigrama
+                                      bigrama=rawData() %>%
+                                        filter(!is_retweet) %>% 
+                                        select(text) %>%
+                                        bind_rows(rawData() %>%
+                                                    filter(is_retweet) %>%
+                                                    select(text=retweet_text)) %>% 
+                                        mutate(text = str_replace_all(text,pat, "")) %>%
+                                        unnest_tokens(word, text, token="ngrams",n=2 ) %>%
+                                        count(word, sort=TRUE) %>%
+                                        separate(word, c("word1", "word2"), sep = " ") %>%
+                                        filter(!word1 %in% c(stopwords("es"),"q","d","t","cc","x","html","posted","just","online","streaming", palabra)) %>%
+                                        filter(!word2 %in% c(stopwords("es"),"q","d","t","cc","x","html","posted","just","online","streaming", palabra)) %>%
+                                        filter(!str_detect(word1,"\\d+")) %>%
+                                        filter(!str_detect(word2,"\\d+")) %>%
+                                        unite(bigrama, word1, word2, sep = " ") %>%
+                                        top_n(20,n) %>%
+                                        ungroup()
+                                      write.csv2(bigrama, file,fileEncoding = 'UTF-8')
+                                    })
+  #Create download
+  output$download4<-downloadHandler(filename <- function() {paste0("histo_",input$query, '.csv')},
+                                    content <- function(file){
+                                      ## Histogram
+                                      p <- rawData() %>%
+                                        mutate(created=with_tz(created_at, tzone="America/Santiago")) %>%
+                                        ggplot(aes(x=created))+geom_histogram(bins = .1*nrow(rawData()),fill="white",col="black")+
+                                        theme_tufte()+theme(axis.text.x=element_text(angle=-45, hjust=0.001),
+                                                            text = element_text(size =20))+
+                                        ggtitle("Número de tweets en el tiempo")
+                                      res <- layer_data(p, 1) %>% 
+                                        select(count, x, xmin, xmax) %>% 
+                                        mutate(reg = row_number()) %>% 
+                                        pivot_longer(-c(reg,count)) %>% 
+                                        mutate(value = lubridate::as_datetime(value)) %>% 
+                                        pivot_wider(names_from = name, values_from = value) %>% 
+                                        select(count, x, xmin, xmax)
+                                      write.csv2(res, file,fileEncoding = 'UTF-8')
+                                    })
+  
+}
+

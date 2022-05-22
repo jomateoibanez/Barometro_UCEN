@@ -1,0 +1,388 @@
+---
+title: "Interbarómetro"
+author: "Observatorio Política y Redes Sociales, Universidad Central"
+date: "5/18/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Contenidos
+
+- Resumen Ejecutivo
+- Conversación política en el territorio digital
+- Rankig de actores. Los más mencionados en la conversación política digital
+- Ranking de temas. Los más mencionados en la conversación política digital
+- Zoom al podio. Radiografía al actor político más mencionado
+- Ranking de partidos, intendentes, intendencias, alcaldes, municipios y prensa
+- Referencia metodológica
+
+## Resumen Ejecutivo
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+Interbarómetro es un informe elaborado por el Observatorio "Política y Redes Sociales" de la Escuela de gobierno y Comunicaciones de la Universidad Central de Chile.Este informe se construye a partir de la recolección y el procesamiento de millones de datos de acceso público presente en las redes sociales. Para ello, son utilizadas distintas aplicaciones y softwares informáticos de escucha inteligente, desarrollados de manera interna y autónoma por el Equipo del Observatorio. <br>
+El análisis que realiza el Equipo del Observatorio tiene por objeto la conversación política digital, la que se estructura en torno a actores, instituciones y temas de interés público en redes sociales. Su objetivo es construir una herramienta clave para la toma de decisiones de los principales actores de nuestro sistema político, permiténdoles comprender la compleja conversación política que se da en el territorio digital. <br>
+Interbarómetro es también la respuesta al desafío de comprender el creciente desplazamiento de la política hacia el territorio digital. La mayor velocidad e intensidad de los cambios sociales que se aprecia en la actualidad, así como el mayor empoderamiento ciudadano y la transformación de estos de receptores a productores de información, indican la necesidad de contar con herramientas que permitan comprender las nuevas formas en que se manifiesta la ciudadanía, a partir de las tecnologías de la información, dando origen así a nuevas dinámicas políticas y comunicativas. 
+</div>
+
+<div class='col-md-6'>
+Aprovechar el potencial de la información mediante su procesamiento y análisis contribuye a superar las formas tradicionales de hacer política y de conversar sobre temas de interés político, integrando nuevas dinámicas y recursos, e implementándolos en el territorio digital en el que esta se disputa.  <br>
+En este sentido, el Informe Interbarómetro que elabora el Observatorio Política y Redes Sociales de la Universidad Central de Chile sigue la misma línea de estudios que promueven otros centros de estudio a nivel regional, como lo son aquellos de la Fundación Cigob de Argentina, con la que se comparte el interés por esta temática. Los documentos que conforman el informe corresponden a conversaciones públicas que son capturadas en la medida en que mencionan a alguno de los actores, las instituciones o las temáticas consideradas como relevantes en la discusión pública. Estos actores, instituciones y temáticas son definidas por el Equipo del Observatorio y son constantemente revisados. Tanto el flujo como el volumen de la información, corresponden a lo que se conoce como "Big Data", concepto que se utiliza para el manejo de datos que tienen al menos tres características: enormes volúmenes, creados en tiempo real y en una variedad de formatos (estructurados, semiestructurados o no estructurados). Por eso, a diferencia de las encuestas de opinión convencionales, el Informe Interbarómetro no busca medir las preferencias u opiniones de forma representativa, sino más bien dar cuenta de la conversación política en curso que toma lugar exclusivamente en el territorio.  
+</div>
+</div>
+
+
+## Documentos analizados durante este mes
+
+- Actores
+
+- Prensa
+
+- Partidos y movimientos
+
+- **Total** 
+
+## Conversación política en el territorio digital
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Nube de palabras
+Las palabras más mencionadas en la conversación política digital
+```{r}
+#*FIGURA 1*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Bigrama de palabras
+Los conceptos más mencionados en la conversación política digital
+```{r}
+#*FIGURA 2*
+```
+
+</div>
+</div>
+
+___
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Evolución
+De la conversación ppolítica en el territorio digital
+```{r}
+#*FIGURA 3*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Los influenciadores
+```{r}
+#*FIGURA 4*
+```
+
+### Los activos
+```{r}
+#*FIGURA 5*
+```
+
+</div>
+</div>
+
+## Ranking de actores
+### Los más mencionados de la conversación política digital 
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+```{r}
+#*FIGURA 6*
+```
+
+</div>
+
+<div class='col-md-6'>
+
+*[Párrafo de interpretación]*
+<br>
+<br>
+<br>
+
+</div>
+</div>
+
+## Conversación política en el territorio digital 
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Ranking de temas
+Los temas más mencionados en la conversación política digital
+```{r}
+#*FIGURA 7*
+```
+
+*[Párrafo de interpretación]*
+
+</div>
+
+<div class='col-md-6'>
+### Los temas más mencionados en la conversación política en prensa digital
+Los conceptos más mencionados en la conversación política digital
+```{r}
+#*FIGURA 8*
+```
+
+*[Párrafo de interpretación]*
+
+</div>
+</div>
+
+## Zoom al podio
+### Actor político más mencionado
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Las palabras más mencionadas
+```{r}
+#*FIGURA 9*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Las ideas más mencionadas
+```{r}
+#*FIGURA 10*
+```
+
+</div>
+</div>
+
+*[Párrafo de interpretación]*
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Valoración
+```{r}
+#*FIGURA 11*
+```
+
+*[Párrafo de interpretación]*
+
+</div>
+
+<div class='col-md-6'>
+### Los cinco temas más asociados
+```{r}
+#*FIGURA 12*
+```
+
+*[Párrafo de interpretación]*
+
+</div>
+</div>
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Evolución en la conversación
+```{r}
+#*FIGURA 13*
+```
+
+*[Párrafo de interpretación]*
+
+</div>
+
+<div class='col-md-6'>
+### Cuentas que más guían la conversación
+```{r}
+#*FIGURA 14*
+```
+
+*[Párrafo de interpretación]*
+
+### Cuentas que más participan en la conversación
+```{r}
+#*FIGURA 15*
+```
+
+</div>
+</div>
+
+___
+
+## Ranking de menciones
+
+## Ranking de partidos y movimientos políticos 
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Los 10 partidos y movimientos políticos más mencionados en el territorio digital
+```{r}
+#*FIGURA 16*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Las palabras más mencionadas en la conversación sobre partidos y movmientos políticos en el territorio digital
+```{r}
+#*FIGURA 17*
+```
+
+</div>
+</div>
+
+*[Párrafo de interpretación]*
+
+## Ranking de intendentes
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Los intendentes más mencionados en el territorio digital
+```{r}
+#*FIGURA 18*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Las palabras más mencionadas en la conversación sobre intendentes en el territorio digital
+```{r}
+#*FIGURA 19*
+```
+
+</div>
+</div>
+
+*[Párrafo de interpretación]*
+
+## Ranking de intendencias
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Los intendencias más mencionados en el territorio digital
+```{r}
+#*FIGURA 20*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Las palabras más mencionadas en la conversación sobre intendencias en el territorio digital
+```{r}
+#*FIGURA 21*
+```
+
+</div>
+</div>
+
+*[Párrafo de interpretación]*
+
+## Ranking de alcaldes
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Los 10 alcaldes más mencionados en el territorio digital
+```{r}
+#*FIGURA 22*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Las palabras más mencionadas en la conversación sobre alcaldes en el territorio digital
+```{r}
+#*FIGURA 23*
+```
+
+</div>
+</div>
+
+*[Párrafo de interpretación]*
+
+## Ranking de municipios
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Los 10 municipios más mencionados en el territorio digital
+```{r}
+#*FIGURA 24*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Las palabras más mencionadas en la conversación sobre intendentes en el territorio digital
+```{r}
+#*FIGURA 25*
+```
+
+</div>
+</div>
+
+*[Párrafo de interpretación]*
+
+## Ranking de prensa
+
+<div class='fluid-row'>
+<div class='col-md-6'>
+### Los 10 medios de prensa digital que generan más conversación en el territorio digital
+```{r}
+#*FIGURA 18*
+```
+
+</div>
+
+<div class='col-md-6'>
+### Las palabras más mencionadas en la conversación sobre medios de prensa digital
+```{r}
+#*FIGURA 19*
+```
+
+</div>
+</div>
+
+*[Párrafo de interpretación]*
+___
+
+## Referencia metodológica 
+
+*El Informe Interbarómetro se elabora a partir de los datos generados por aplicaciones y softwares desarrollados por el equipo del Observatorio Política y Redes Sociales. Estos softwares y aplicaciones rescatan permanentemente datos que, de manera abierta y pública, se generan en las redes sociales Twitter y Facebook, y que mencionan alguna de las palabras claves (queries) que guían la búsqueda. Las queries son determinadas por el Equipo del Observatorio y la Lógica que guía su determinación es que cada vez que se les menciona, se estaría en presencia de conversaciones que versan sobre temas públicos de interés político. son tres las tipologías de queries que considera este informe: actores, instituciones y temas.*
+
+
+
+### Tipologías de queries
+
+*Actores: cada actor político (más de 300 para este informe) se identifica por medio de dos parámetros de búsqueda (dos queries): a) el nombre de su cuenta twitter y b) las formas más difusas de referirse al mismo. Por ejemplo, en el caso de Sebastián Piñera, sus dos queries de búsqueda son a) @sebastianpinera y b) Piñera.* 
+
+
+*Instituciones: cada institución (más de 100 para este informe) se identifica por medio del nombre de su cuenta twitter. Por ejemplo, en el caso del Ministerio de Relaciones Exteriores, su querie de búsqueda es: @Minrel_Chile.*
+
+*Temas: cada temática es determinada de acuerdo a una descripción propia de la misma. Actualmente se cuenta con una lista de 17 temáticas (Economí, Elecciones, Educación, etc.), a las que deben sumarse aquellas de caracter coyuntural (Visita del Papa, por ejemplo). La categorización de las temáticas se realiza de manera mensual, por parte de miembros del equipo del Observatorio, a travñes de un control de doble par ciego sobre un muestreo probabilístico aleatorio de las conversaciones a analizar.* 
+
+*La sistematización de los datos es realizada por miembros del Equipo del Observatorio, respetando parámetros de imparcialidad, transparencia y rigurosidad académica. Respetando estos parámetros, el equipo desarrolla una serie de insumos gráficos. Los académicos del Observatorio realizan finalmente el análisis de los mismos, desde una perspectiva politológica que tenga cuenta de la coyuntura social e institucional.*
+
+### Sobre la valoración
+
+*Por medio de una aplicación informática de desarrollo propio, basada en R, se recuperan cotidianamente los datos relacionados con el tópico de búsqueda en la plataforma Twitter. Es decir, todo documento publicado en Twitter que contenga le tópico conceptualizado. Cada típico de búsqueda, que se estructura conceptualmente (por ejemplo "Sebastián Piñera"), se compone de distintas queries (palabras o juegos de palabras) asocaidas a dicho concepto ("@sebastianpinera", "#Piñera" o "Pinera"). Los datos recogidos son analizados por un académico experto, de modo de identificar la presencia de imágenes, bots, trolls, influenciadores u otros, en el ámbito de la conversación observada. Con la base depurada, un equipo de ayudantes de investigación procede a la obtención de una muestra representativa, con un nivel de confianza de un 95% y margen de error de n 5%. Sobre la muestra obtenida, se procede a una valoración cuantitativa y cualitatica de la misma. La valoración consiste en clasificar los tuits producidos y reproducidos en la red (y presentes en la muestra), según conveniencia que la forma y/o contenido de estos representen para cada tópico de búsqueda analizado. Las formas de clasificarlos son: positivo, negativo o neutro. El parámetro se obtiene de la respuesta*
+
+## Equipo
+
+### Director:
+Nicolás Freire Castello
+
+### Coordinación Académica e Investigación:
+Felipe González López
+
+### Coordinación de Comunicación:
+José Catenacci Martin
+
+### Coordinación de Diseño:
+Ricardo Sierralta Calderón
+
+### Apoyo externo:
+Victor Medina, Estadísticas e Ingeniería
