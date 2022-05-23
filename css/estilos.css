@@ -102,6 +102,15 @@ h1{
     padding-bottom: 3px;
 }
 
+.h2{
+    font-family: 'Open Sans', sans-serif;
+    color: black;
+    font-size: 20px;
+    font-style: normal;
+    text-align: left;
+    padding-bottom: 3px;
+}
+
 .titulo2{
     font-family: 'Open Sans', sans-serif;
     color: #0c27f0;
